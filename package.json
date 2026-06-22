@@ -1,0 +1,86 @@
+{
+  "name": "cc-usage",
+  "displayName": "Claude Code Usage",
+  "description": "Live Claude Code usage in a sidebar dashboard and status-bar item — 5-hour limit, cost, tokens, context fill. Fed by the status line, not transcript parsing.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/madushanka/cc-usage.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ccUsage",
+          "title": "Claude Code Usage",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ccUsage": [
+        {
+          "type": "webview",
+          "id": "ccUsage.dashboard",
+          "name": "Usage"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "ccUsage.setup",
+        "title": "Claude Code Usage: Set Up Status-Line Bridge"
+      },
+      {
+        "command": "ccUsage.focusDashboard",
+        "title": "Claude Code Usage: Focus Dashboard"
+      },
+      {
+        "command": "ccUsage.openSessionsFolder",
+        "title": "Claude Code Usage: Open Sessions Folder"
+      }
+    ],
+    "configuration": {
+      "title": "Claude Code Usage",
+      "properties": {
+        "ccUsage.staleSeconds": {
+          "type": "number",
+          "default": 60,
+          "minimum": 5,
+          "description": "Grey out the readout when no session has updated within this many seconds. The 5-hour countdown keeps ticking regardless."
+        },
+        "ccUsage.activeWindowMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "description": "Sessions updated within this many minutes count as active and are included in aggregated cost."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node test/test.js && node test/dashboard.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.0",
+    "jsdom": "^24.1.0",
+    "typescript": "^5.4.5"
+  }
+}

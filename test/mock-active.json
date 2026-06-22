@@ -1,0 +1,36 @@
+{
+  "session_id": "11111111-aaaa-bbbb-cccc-222222222222",
+  "session_name": "feature-work",
+  "cwd": "/Users/madushanka/dev/claude_cost",
+  "model": { "id": "claude-opus-4-8", "display_name": "Opus" },
+  "workspace": {
+    "current_dir": "/Users/madushanka/dev/claude_cost",
+    "project_dir": "/Users/madushanka/dev/claude_cost"
+  },
+  "version": "2.1.153",
+  "cost": {
+    "total_cost_usd": 0.4213,
+    "total_duration_ms": 845000,
+    "total_api_duration_ms": 23000,
+    "total_lines_added": 156,
+    "total_lines_removed": 23
+  },
+  "context_window": {
+    "total_input_tokens": 48211,
+    "total_output_tokens": 1200,
+    "context_window_size": 200000,
+    "used_percentage": 24,
+    "remaining_percentage": 76,
+    "current_usage": {
+      "input_tokens": 8500,
+      "output_tokens": 1200,
+      "cache_creation_input_tokens": 5000,
+      "cache_read_input_tokens": 34711
+    }
+  },
+  "exceeds_200k_tokens": false,
+  "rate_limits": {
+    "five_hour": { "used_percentage": 23.5, "resets_at": 1893456000 },
+    "seven_day": { "used_percentage": 41.2, "resets_at": 1893801600 }
+  }
+}

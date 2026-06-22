@@ -1,0 +1,24 @@
+{
+  "session_id": "33333333-dddd-eeee-ffff-444444444444",
+  "cwd": "/Users/madushanka/dev/other",
+  "model": { "id": "claude-sonnet-4-6", "display_name": "Sonnet" },
+  "workspace": {
+    "current_dir": "/Users/madushanka/dev/other",
+    "project_dir": "/Users/madushanka/dev/other"
+  },
+  "version": "2.1.153",
+  "cost": {
+    "total_cost_usd": 0.0,
+    "total_duration_ms": 1200,
+    "total_api_duration_ms": 0
+  },
+  "context_window": {
+    "total_input_tokens": 0,
+    "total_output_tokens": 0,
+    "context_window_size": 200000,
+    "used_percentage": null,
+    "remaining_percentage": null,
+    "current_usage": null
+  },
+  "exceeds_200k_tokens": false
+}
