@@ -68,7 +68,8 @@ export class StatusBarController {
       : undefined;
 
     const five = agg.fiveHour?.used_percentage;
-    if (!agg.stale && typeof five === "number" && five >= 90) {
+    const fiveHigh = typeof five === "number" && five >= 90;
+    if (!agg.stale && (fiveHigh || agg.compactSuggested)) {
       this.item.backgroundColor = new vscode.ThemeColor(
         "statusBarItem.warningBackground"
       );

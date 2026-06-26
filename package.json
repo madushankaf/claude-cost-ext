@@ -3,18 +3,39 @@
   "displayName": "Claude Code Usage",
   "description": "Live Claude Code usage in a sidebar dashboard and status-bar item — 5-hour limit, cost, tokens, context fill. Fed by the status line, not transcript parsing.",
   "version": "0.0.1",
-  "publisher": "local",
+  "publisher": "madushankaf",
   "license": "MIT",
+  "author": "Madushanka",
+  "icon": "media/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/madushanka/cc-usage.git"
+    "url": "https://github.com/madushankaf/claude-cost-ext.git"
+  },
+  "homepage": "https://github.com/madushankaf/claude-cost-ext#readme",
+  "bugs": {
+    "url": "https://github.com/madushankaf/claude-cost-ext/issues"
   },
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
+    "Visualization",
     "Other"
   ],
+  "keywords": [
+    "claude",
+    "claude code",
+    "usage",
+    "cost",
+    "tokens",
+    "rate limit",
+    "dashboard",
+    "status bar"
+  ],
+  "galleryBanner": {
+    "color": "#1A1916",
+    "theme": "dark"
+  },
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -50,6 +71,14 @@
       {
         "command": "ccUsage.openSessionsFolder",
         "title": "Claude Code Usage: Open Sessions Folder"
+      },
+      {
+        "command": "ccUsage.compactNow",
+        "title": "Claude Code Usage: Compact Now (send /compact to active terminal)"
+      },
+      {
+        "command": "ccUsage.copyCompactCommand",
+        "title": "Claude Code Usage: Copy /compact Command"
       }
     ],
     "configuration": {
@@ -66,6 +95,24 @@
           "default": 30,
           "minimum": 1,
           "description": "Sessions updated within this many minutes count as active and are included in aggregated cost."
+        },
+        "ccUsage.compactThresholdPercent": {
+          "type": "number",
+          "default": 50,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Suggest running /compact once a session's context fill reaches this percent. Drives the status-bar hint and the notification."
+        },
+        "ccUsage.compactNotification": {
+          "type": "boolean",
+          "default": true,
+          "description": "Pop a notification when context crosses the compact threshold (edge-triggered — fires once per crossing, not repeatedly). The status-bar hint shows regardless."
+        },
+        "ccUsage.compactInstructions": {
+          "type": "string",
+          "default": "",
+          "editPresentation": "multilineText",
+          "markdownDescription": "Preservation rules appended to the `/compact` command from the notification and the compact commands, e.g. `keep the open files, current task, and unresolved errors`. Leave empty for a plain `/compact`."
         }
       }
     }
