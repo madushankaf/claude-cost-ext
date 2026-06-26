@@ -24,9 +24,15 @@ still prints your normal status line — so nothing about your terminal changes.
 
 ## Install
 
-1. Install **Claude Code Usage** from the
-   [Marketplace](https://marketplace.visualstudio.com/items?itemName=madushankaf.cc-usage),
-   or run `code --install-extension madushankaf.cc-usage`.
+1. Build the `.vsix` from source, then install it:
+   ```
+   npm install
+   npx tsc -p ./
+   npx @vscode/vsce package
+   code --install-extension cc-compact-helper-<version>.vsix
+   ```
+   You can also install the built `.vsix` from the UI via **Extensions: Install
+   from VSIX…** in the Command Palette.
 2. Run **“Claude Code Usage: Set Up Status-Line Bridge”** from the Command
    Palette. It installs the bridge and wires `statusLine` in `~/.claude/settings.json`
    (wrapping any existing one).
