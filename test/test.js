@@ -125,6 +125,51 @@ function main() {
   const tip = model.buildTooltipMarkdown(agg, store.sessions, now);
   ok(/API-equivalent/.test(tip) && /Opus/.test(tip), "tooltip includes API-equivalent label + model");
 
+  console.log("\nCompaction nudge");
+  ok(model.compactCommand("") === "/compact", "compactCommand: empty -> plain /compact");
+  ok(
+    model.compactCommand("keep the auth refactor") === "/compact keep the auth refactor",
+    "compactCommand: appends instructions"
+  );
+  ok(model.compactCommand("  x  ") === "/compact x", "compactCommand: trims instructions");
+
+  const sess = (id, ctx, ageMs = 0) => ({
+    id,
+    receivedAt: now - ageMs,
+    payload: { context_window: { used_percentage: ctx } },
+  });
+  const staleMs = 60000;
+
+  // Edge-trigger: fires once on the way up, not again while still over.
+  let st = {};
+  let r = model.detectCompactCrossings([sess("a", 55)], st, 50, staleMs, now);
+  ok(r.fired.length === 1 && r.fired[0] === "a", "crossing up fires once");
+  st = r.next;
+  r = model.detectCompactCrossings([sess("a", 70)], st, 50, staleMs, now);
+  ok(r.fired.length === 0, "still over -> no re-fire");
+  st = r.next;
+  // Drops below (e.g. after /compact), then crosses again -> fires again.
+  r = model.detectCompactCrossings([sess("a", 20)], st, 50, staleMs, now);
+  ok(r.fired.length === 0 && r.next.a === false, "drop below clears the over-flag");
+  st = r.next;
+  r = model.detectCompactCrossings([sess("a", 60)], st, 50, staleMs, now);
+  ok(r.fired.length === 1, "re-crossing fires again");
+
+  // Stale session never fires.
+  r = model.detectCompactCrossings([sess("b", 90, staleMs + 5000)], {}, 50, staleMs, now);
+  ok(r.fired.length === 0 && r.next.b === false, "stale session does not fire");
+
+  // aggregate() flags compactSuggested off the freshest session vs threshold.
+  const aggOpts = { staleMs, activeWindowMs: 1800000, compactThresholdPct: 50 };
+  const over = model.aggregate([sess("a", 64)], now, aggOpts);
+  ok(over.compactSuggested === true && Math.round(over.freshestCtxPct) === 64, "aggregate suggests compact when over");
+  const under = model.aggregate([sess("a", 30)], now, aggOpts);
+  ok(under.compactSuggested === false, "aggregate does not suggest when under");
+  ok(
+    model.formatStatusBarText(over, now).includes("/compact"),
+    "status text shows /compact hint when suggested"
+  );
+
   store.dispose();
   fs.rmSync(tmp, { recursive: true, force: true });
 

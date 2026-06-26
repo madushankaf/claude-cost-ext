@@ -11,14 +11,17 @@ import { StatusBarController } from "./statusBar";
 import { DashboardProvider } from "./dashboard";
 import { AggregateOptions } from "./model";
 import { runSetup, isInstalled } from "./setup";
+import { CompactNotifier, runCompact } from "./compact";
 
 function readOptions(): AggregateOptions {
   const cfg = vscode.workspace.getConfiguration("ccUsage");
   const staleSeconds = cfg.get<number>("staleSeconds", 60);
   const activeWindowMinutes = cfg.get<number>("activeWindowMinutes", 30);
+  const compactThreshold = cfg.get<number>("compactThresholdPercent", 50);
   return {
     staleMs: Math.max(5, staleSeconds) * 1000,
     activeWindowMs: Math.max(1, activeWindowMinutes) * 60 * 1000,
+    compactThresholdPct: Math.min(100, Math.max(1, compactThreshold)),
   };
 }
 
@@ -28,10 +31,12 @@ export function activate(context: vscode.ExtensionContext): void {
   const store = new SessionStore(defaultSessionsDir(), opts.staleMs);
   const statusBar = new StatusBarController(opts);
   const dashboard = new DashboardProvider(context.extensionUri, opts);
+  const compact = new CompactNotifier(opts.compactThresholdPct);
 
   store.on("change", (sessions) => {
     statusBar.update(sessions);
     dashboard.update(sessions);
+    compact.update(sessions, opts.staleMs);
   });
   store.start();
 
@@ -49,12 +54,19 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("ccUsage.focusDashboard", async () => {
       await vscode.commands.executeCommand("ccUsage.dashboard.focus");
     }),
+    vscode.commands.registerCommand("ccUsage.compactNow", () =>
+      runCompact("terminal")
+    ),
+    vscode.commands.registerCommand("ccUsage.copyCompactCommand", () =>
+      runCompact("clipboard")
+    ),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("ccUsage")) {
         opts = readOptions();
         store.setStaleMs(opts.staleMs);
         statusBar.setOptions(opts);
         dashboard.setOptions(opts);
+        compact.setThreshold(opts.compactThresholdPct);
       }
     })
   );

@@ -1,5 +1,6 @@
 .vscode/**
 .vscode-test/**
+.claude/**
 src/**
 test/**
 **/*.map
@@ -8,5 +9,6 @@ tsconfig.json
 .gitignore
 node_modules/**
 *.vsix
-!out/**
+package-lock.json
+media/icon-marketplace.svg
 !bridge/**

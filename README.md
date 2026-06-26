@@ -1,7 +1,7 @@
 # Claude Code Usage (VS Code extension)
 
-Live Claude Code usage in a bottom-right status-bar item (and, next, a sidebar
-dashboard). Headline metric is the **5-hour rate limit** with a live countdown;
+Live Claude Code usage in a bottom-right status-bar item and a sidebar
+dashboard. Headline metric is the **5-hour rate limit** with a live countdown;
 it also tracks API-equivalent cost, tokens, and context fill.
 
 Data comes from Claude Code's **status line**, not from parsing transcripts. A
@@ -32,21 +32,29 @@ existing output keeps showing.
   (input / output / cache write / cache read), and a list of all sessions with
   "updated Ns ago". Re-renders every second so the countdown ticks even when no
   new data arrives; dims when stale.
+- **Compaction nudge**: when a session's context fill crosses a threshold
+  (default 50%), the status-bar item shows a `⚠ /compact` hint with a warning
+  background, and a one-time notification offers **Compact now** (sends
+  `/compact` to the active terminal), **Copy** (copies it to the clipboard), or
+  **Don't show again**. Set `ccUsage.compactInstructions` to append your own
+  preservation rules to every `/compact`. The notification is edge-triggered —
+  it fires once per crossing and only again after the context drops back down
+  (e.g. after a `/compact`), so it never spams.
 
-## Setup
+## Install
 
-1. `npm install`
-2. `npm run compile`
-3. Open this folder in VS Code and press `F5` (Run Extension) to launch the
-   Extension Development Host.
-4. Run **“Claude Code Usage: Set Up Status-Line Bridge”** from the Command
+1. Install **Claude Code Usage** from the VS Code Marketplace (or the Open VSX
+   Registry for Cursor / Windsurf / VSCodium). You can also `code --install-extension
+   madushankaf.cc-usage`, or install a downloaded `.vsix` via **Extensions:
+   Install from VSIX…** in the Command Palette.
+2. Run **“Claude Code Usage: Set Up Status-Line Bridge”** from the Command
    Palette (or accept the first-run prompt). It installs the bridge to
    `~/.claude/cc-usage/cc-usage-bridge.js` and wires `statusLine` in
    `~/.claude/settings.json` (wrapping any existing one). A copy-paste fallback
    is offered if it can't edit your settings safely.
-5. **Restart Claude Code and accept the one-time status-line trust prompt.**
+3. **Restart Claude Code and accept the one-time status-line trust prompt.**
    Status-line scripts only run after you've accepted workspace trust.
-6. Open the **Claude Code Usage** icon in the activity bar for the dashboard.
+4. Open the **Claude Code Usage** icon in the activity bar for the dashboard.
    The bottom-right status-bar item is always visible; click it to focus the
    dashboard.
 
@@ -73,10 +81,46 @@ existing output keeps showing.
 - `ccUsage.staleSeconds` (default 60) — grey-out threshold.
 - `ccUsage.activeWindowMinutes` (default 30) — sessions counted as active for
   cost aggregation.
+- `ccUsage.compactThresholdPercent` (default 50) — context fill at which the
+  `/compact` hint and notification trigger.
+- `ccUsage.compactNotification` (default true) — pop the notification on
+  crossing. The status-bar hint shows regardless.
+- `ccUsage.compactInstructions` (default empty) — preservation rules appended to
+  `/compact`, e.g. `keep the open files, current task, and unresolved errors`.
+
+The **Compact now** action sends `/compact` to VS Code's *active* terminal — make
+sure your Claude Code terminal is focused, or use **Copy** and paste it yourself.
+The same actions are available from the Command Palette as **Compact Now** and
+**Copy /compact Command**.
 
 ## Develop
+
+1. `npm install`
+2. `npm run compile`
+3. Open this folder in VS Code and start the **Run Extension** launch config to
+   open the Extension Development Host. Use the **Run and Debug** view (the play
+   icon in the activity bar) → green ▶ button, or **Run → Start Debugging** from
+   the menu bar. The `F5` shortcut also works — on a Mac press `fn+F5` if the
+   top-row keys are set to hardware controls (brightness/volume).
+
+Scripts:
 
 - `npm run compile` — type-check + build to `out/`.
 - `npm run watch` — incremental build.
 - `npm test` — compile, then run the pipeline/aggregation tests
   (`test/test.js`) and the headless dashboard render tests (`test/dashboard.test.js`).
+- `npx @vscode/vsce package` — build a `.vsix`.
+- `npx @vscode/vsce publish` — publish to the Marketplace (requires a publisher
+  and a Personal Access Token; see Publishing below).
+
+## Publishing
+
+The extension is published under the `madushankaf` publisher as
+`madushankaf.cc-usage`.
+
+1. Create a publisher at <https://marketplace.visualstudio.com/manage> and a
+   Personal Access Token (Azure DevOps, **Marketplace → Manage** scope).
+2. `npx @vscode/vsce login madushankaf` (paste the token).
+3. `npm test && npx @vscode/vsce publish`.
+4. Optional — publish to Open VSX for Cursor / Windsurf / VSCodium:
+   `npx ovsx publish cc-usage-<version>.vsix -p <openvsx-token>`.

@@ -84,6 +84,8 @@ export interface SessionInfo {
 export interface AggregateOptions {
   activeWindowMs: number;
   staleMs: number;
+  /** Suggest /compact when a session's context fill reaches this percent. */
+  compactThresholdPct: number;
 }
 
 export interface Aggregate {
@@ -95,6 +97,10 @@ export interface Aggregate {
   rateFromSessionId?: string;
   freshestAgeMs: number; // Infinity when there are no sessions
   stale: boolean; // nothing updated within staleMs
+  /** Context fill of the freshest session that reports one (0..100+), or undefined. */
+  freshestCtxPct?: number;
+  /** True when the freshest (non-stale) session is at/over the compact threshold. */
+  compactSuggested: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -171,6 +177,22 @@ export function aggregate(
   }
 
   const freshestAgeMs = byFreshest.length ? byFreshest[0].ageMs : Infinity;
+  const stale = freshestAgeMs > opts.staleMs;
+
+  // Context fill is per-session; read it from the freshest session that reports
+  // a number (the one you're most likely actively working in).
+  let freshestCtxPct: number | undefined;
+  for (const s of byFreshest) {
+    const c = s.payload?.context_window?.used_percentage;
+    if (typeof c === "number" && isFinite(c)) {
+      freshestCtxPct = c;
+      break;
+    }
+  }
+  const compactSuggested =
+    !stale &&
+    typeof freshestCtxPct === "number" &&
+    freshestCtxPct >= opts.compactThresholdPct;
 
   return {
     activeCount,
@@ -180,8 +202,48 @@ export function aggregate(
     sevenDay,
     rateFromSessionId,
     freshestAgeMs,
-    stale: freshestAgeMs > opts.staleMs,
+    stale,
+    freshestCtxPct,
+    compactSuggested,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Compaction nudge
+// ---------------------------------------------------------------------------
+
+/** Build the `/compact` command, appending preservation instructions if set. */
+export function compactCommand(instructions?: string): string {
+  const trimmed = (instructions ?? "").trim();
+  return trimmed ? `/compact ${trimmed}` : "/compact";
+}
+
+/**
+ * Edge-trigger detection for the compaction nudge. Returns the session ids that
+ * newly crossed up to/over the threshold since the last check, plus the next
+ * state to remember. A session only re-fires after its context drops back below
+ * the threshold (e.g. after a /compact), so this never spams.
+ *
+ * Stale sessions never fire and are dropped from the carried state.
+ */
+export function detectCompactCrossings(
+  sessions: SessionInfo[],
+  prevOver: Record<string, boolean>,
+  thresholdPct: number,
+  staleMs: number,
+  now: number
+): { fired: string[]; next: Record<string, boolean> } {
+  const fired: string[] = [];
+  const next: Record<string, boolean> = {};
+  for (const s of sessions) {
+    const stale = now - s.receivedAt > staleMs;
+    const ctx = s.payload?.context_window?.used_percentage;
+    const isOver =
+      !stale && typeof ctx === "number" && isFinite(ctx) && ctx >= thresholdPct;
+    if (isOver && !prevOver[s.id]) fired.push(s.id);
+    next[s.id] = isOver;
+  }
+  return { fired, next };
 }
 
 // ---------------------------------------------------------------------------
@@ -234,6 +296,7 @@ export function formatStatusBarText(agg: Aggregate, now: number): string {
   }
   segs.push(formatCost(agg.costUsd));
   if (agg.activeCount > 1) segs.push(`${agg.activeCount} sess`);
+  if (agg.compactSuggested) segs.push("$(warning) /compact");
   return `$(graph) ${segs.join(" · ")}`;
 }
 
@@ -272,6 +335,13 @@ export function buildTooltipMarkdown(
     }`
   );
   lines.push("<sub>Not billed on Pro/Max — this is the estimated API cost.</sub>");
+
+  if (agg.compactSuggested && typeof agg.freshestCtxPct === "number") {
+    lines.push("");
+    lines.push(
+      `**⚠ Context ${Math.round(agg.freshestCtxPct)}% full — consider \`/compact\`.**`
+    );
+  }
 
   if (agg.stale) {
     lines.push("");
