@@ -79,6 +79,10 @@
       {
         "command": "ccUsage.copyCompactCommand",
         "title": "Claude Code Usage: Copy /compact Command"
+      },
+      {
+        "command": "ccUsage.editCompactInstructions",
+        "title": "Claude Code Usage: Edit Compact Instructions"
       }
     ],
     "configuration": {
