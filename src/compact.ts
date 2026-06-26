@@ -80,11 +80,16 @@ export class CompactNotifier {
     const msg = `Claude Code context is ${pctText}. Consider running /compact.`;
 
     void vscode.window
-      .showWarningMessage(msg, "Compact now", "Copy", "Don't show again")
+      .showWarningMessage(msg, "Compact now", "Copy", "Edit instructions", "Don't show again")
       .then((choice) => {
         if (choice === "Compact now") void runCompact("terminal");
         else if (choice === "Copy") void runCompact("clipboard");
-        else if (choice === "Don't show again") {
+        else if (choice === "Edit instructions") {
+          void vscode.commands.executeCommand(
+            "workbench.action.openSettings",
+            "ccUsage.compactInstructions"
+          );
+        } else if (choice === "Don't show again") {
           void vscode.workspace
             .getConfiguration("ccUsage")
             .update(

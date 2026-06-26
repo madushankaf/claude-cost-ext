@@ -60,6 +60,12 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("ccUsage.copyCompactCommand", () =>
       runCompact("clipboard")
     ),
+    vscode.commands.registerCommand("ccUsage.editCompactInstructions", () =>
+      vscode.commands.executeCommand(
+        "workbench.action.openSettings",
+        "ccUsage.compactInstructions"
+      )
+    ),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("ccUsage")) {
         opts = readOptions();
