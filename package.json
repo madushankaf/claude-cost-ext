@@ -1,5 +1,5 @@
 {
-  "name": "cc-usage",
+  "name": "claude-code-usage",
   "displayName": "Claude Code Usage",
   "description": "Live Claude Code usage in a sidebar dashboard and status-bar item — 5-hour limit, cost, tokens, context fill. Fed by the status line, not transcript parsing.",
   "version": "0.0.1",
